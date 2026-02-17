@@ -6,7 +6,7 @@ const MANIFEST = {
   version: '1.0.0',
   name: 'Trailerio Lite',
   description: 'Trailer addon - Apple TV, Plex, RT, Digital Digest, IMDb',
-  logo: 'https://i.imgur.com/qlfRkLp.png',
+  logo: 'https://raw.githubusercontent.com/9mousaa/trailerio-lite/main/icon.png',
   resources: ['stream'],
   types: ['movie', 'series'],
   idPrefixes: ['tt'],
