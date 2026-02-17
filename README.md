@@ -103,3 +103,4 @@ For higher limits, Workers Paid is $5/month for 10 million requests.
 ## License
 
 MIT
+
