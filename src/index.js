@@ -117,7 +117,22 @@ async function resolveRottenTomatoes(imdbId) {
     );
     const html = await pageRes.text();
 
-    const urlMatch = html.match(/https:\/\/link\.theplatform\.com\/s\/[^"]+/);
+    // Try direct theplatform URL first (old format)
+    let urlMatch = html.match(/https:\/\/link\.theplatform\.com\/s\/[^"]+/);
+
+    // If not found, look for video page URL and fetch it
+    if (!urlMatch) {
+      const videoPageMatch = html.match(/contentUrl":"(https:\/\/www\.rottentomatoes\.com\/[^"]+\/videos\/[^"]+)"/);
+      if (videoPageMatch) {
+        const videoPageRes = await fetchWithTimeout(
+          videoPageMatch[1],
+          { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } }
+        );
+        const videoHtml = await videoPageRes.text();
+        urlMatch = videoHtml.match(/https:\/\/link\.theplatform\.com\/s\/[^"]+/);
+      }
+    }
+
     if (urlMatch) {
       const url = urlMatch[0].replace(/formats=[^&]+/, 'formats=MPEG4') + '&format=redirect';
       return { url, provider: 'Rotten Tomatoes' };
