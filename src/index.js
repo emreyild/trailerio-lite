@@ -52,7 +52,7 @@ async function resolveAppleTV(imdbId) {
 
     const hlsMatch = html.match(/https:\/\/[^"]*\.m3u8[^"]*/);
     if (hlsMatch) {
-      return { url: hlsMatch[0], provider: 'Apple TV' };
+      return { url: hlsMatch[0].replace(/&amp;/g, '&'), provider: 'Apple TV' };
     }
   } catch (e) { /* silent fail */ }
   return null;
@@ -134,7 +134,7 @@ async function resolveRottenTomatoes(imdbId) {
     }
 
     if (urlMatch) {
-      const url = urlMatch[0].replace(/formats=[^&]+/, 'formats=MPEG4') + '&format=redirect';
+      const url = urlMatch[0].replace(/&amp;/g, '&').replace(/formats=[^&]+/, 'formats=MPEG4') + '&format=redirect';
       return { url, provider: 'Rotten Tomatoes' };
     }
   } catch (e) { /* silent fail */ }
@@ -206,7 +206,7 @@ async function resolveIMDb(imdbId) {
 // ============== MAIN RESOLVER ==============
 
 async function resolveTrailers(imdbId, cache) {
-  const cacheKey = `trailer:v3:${imdbId}`;
+  const cacheKey = `trailer:v4:${imdbId}`;
   const cached = await cache.match(new Request(`https://cache/${cacheKey}`));
   if (cached) {
     return await cached.json();
