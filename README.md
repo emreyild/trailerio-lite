@@ -1,76 +1,104 @@
 # Trailerio Lite
 
-Minimal trailer resolver on Cloudflare Workers. Zero storage, globally distributed.
+Minimal movie trailer addon for Stremio. Runs on Cloudflare Workers (free tier).
+
+## What it does
+
+Finds the best available trailer for any movie/series by checking multiple sources in order:
+
+1. **Apple TV** - 4K HDR HLS streams
+2. **Plex** - 1080p from IVA CDN
+3. **Rotten Tomatoes** - 1080p from Fandango CDN
+4. **Digital Digest** - 4K from PeerTube
+5. **IMDb** - 1080p fallback
+
+Returns the first successful match. Results are cached for 24 hours.
 
 ## Features
 
-- **Edge deployed** - Runs on 300+ Cloudflare locations
-- **Zero storage** - Uses Workers Cache API
-- **Instant scaling** - Handles millions of requests
-- **Free tier** - 100k requests/day free
+- **Zero cost** - Runs on Cloudflare Workers free tier (100k requests/day)
+- **Zero storage** - Uses edge caching, no database needed
+- **Global** - Deployed to 300+ edge locations worldwide
+- **Fast** - Returns cached results instantly, fresh lookups in 2-8 seconds
 
-## Source Priority
+## Deploy to Cloudflare Workers
 
-1. **Apple TV** - 4K HDR/HLS
-2. **Plex** - 1080p IVA CDN
-3. **Rotten Tomatoes** - 1080p Fandango CDN
-4. **Digital Digest** - 4K PeerTube
-5. **IMDb** - 1080p fallback
+### Option 1: Dashboard (Easiest)
 
-## Quick Start
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com)
+2. Click **Workers & Pages** → **Create application** → **Create Worker**
+3. Name it (e.g., `trailers`)
+4. Click **Deploy**
+5. Click **Edit code**
+6. Delete everything, paste contents of `src/index.js`
+7. Click **Save and deploy**
+
+Your addon URL: `https://trailers.YOUR-SUBDOMAIN.workers.dev/manifest.json`
+
+### Option 2: Git Integration
+
+1. Fork this repo
+2. Go to Cloudflare Dashboard → **Workers & Pages**
+3. Click **Create application** → **Connect to Git**
+4. Select your forked repo
+5. Deploy
+
+Auto-deploys on every push.
+
+### Option 3: Wrangler CLI
 
 ```bash
-# Install dependencies
+git clone https://github.com/9mousaa/trailerio-lite.git
+cd trailerio-lite
 npm install
-
-# Local development
-npm run dev
-
-# Deploy to Cloudflare
+npx wrangler login
 npm run deploy
 ```
 
-## API
+## Add to Stremio
+
+1. Open Stremio
+2. Go to **Addons** → **Community Addons**
+3. Enter your addon URL:
+   ```
+   https://YOUR-WORKER.workers.dev/manifest.json
+   ```
+4. Click **Install**
+
+## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /manifest.json` | Stremio manifest |
-| `GET /stream/movie/{imdbId}.json` | Get trailer stream |
-| `GET /stream/series/{imdbId}.json` | Get trailer stream |
-| `GET /health` | Health check |
+| `/manifest.json` | Stremio manifest |
+| `/stream/movie/{imdbId}.json` | Get movie trailer |
+| `/stream/series/{imdbId}.json` | Get series trailer |
+| `/health` | Health check |
 
-## Stremio Installation
+## Example
 
-Add this URL to Stremio:
+Request:
 ```
-https://your-worker.workers.dev/manifest.json
+GET /stream/movie/tt15398776.json
 ```
 
-## Cost
+Response:
+```json
+{
+  "streams": [{
+    "url": "https://play.itunes.apple.com/.../playlist.m3u8",
+    "title": "Trailer (Apple TV)",
+    "name": "4K Apple TV"
+  }]
+}
+```
+
+## Limits
 
 Cloudflare Workers Free Tier:
 - 100,000 requests/day
 - 10ms CPU time per request
 
-For 30k+ users, upgrade to Workers Paid ($5/mo):
-- 10 million requests/month included
-- Unlimited thereafter at $0.50/million
-
-## Architecture
-
-```
-User Request
-     ↓
-Cloudflare Edge (nearest POP)
-     ↓
-Check Cache → Hit? → Return cached
-     ↓ Miss
-Resolve (Apple TV → Plex → RT → DD → IMDb)
-     ↓
-Cache result (24h TTL)
-     ↓
-Return stream
-```
+For higher limits, Workers Paid is $5/month for 10 million requests.
 
 ## License
 
