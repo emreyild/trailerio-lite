@@ -1,6 +1,6 @@
 # Trailerio Lite
 
-Minimal movie trailer addon for Stremio. Runs on Cloudflare Workers (free tier).
+Minimal movie trailer addon for Fusion. Runs on Cloudflare Workers (free tier).
 
 ## What it does
 
@@ -55,21 +55,21 @@ npx wrangler login
 npm run deploy
 ```
 
-## Add to Stremio
+## Add to Fusion
 
-1. Open Stremio
-2. Go to **Addons** → **Community Addons**
+1. Open Fusion
+2. Go to **Addons**
 3. Enter your addon URL:
    ```
    https://YOUR-WORKER.workers.dev/manifest.json
    ```
-4. Click **Install**
+4. Install
 
 ## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
-| `/manifest.json` | Stremio manifest |
+| `/manifest.json` | Addon manifest |
 | `/stream/movie/{imdbId}.json` | Get movie trailer |
 | `/stream/series/{imdbId}.json` | Get series trailer |
 | `/health` | Health check |
@@ -86,8 +86,8 @@ Response:
 {
   "streams": [{
     "url": "https://play.itunes.apple.com/.../playlist.m3u8",
-    "title": "Trailer (Apple TV)",
-    "name": "4K Apple TV"
+    "name": "▶️ 4K",
+    "title": "Trailer (Apple TV)"
   }]
 }
 ```

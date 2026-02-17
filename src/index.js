@@ -1,11 +1,12 @@
 // Trailerio Lite - Cloudflare Workers Edition
-// Zero storage, edge-deployed trailer resolver
+// Zero storage, edge-deployed trailer resolver for Fusion
 
 const MANIFEST = {
   id: 'io.trailerio.lite',
   version: '1.0.0',
   name: 'Trailerio Lite',
-  description: 'Minimal trailer resolver - Apple TV, Plex, RT, Digital Digest, IMDb',
+  description: 'Trailer addon - Apple TV, Plex, RT, Digital Digest, IMDb',
+  logo: 'https://i.imgur.com/qlfRkLp.png',
   resources: ['stream'],
   types: ['movie', 'series'],
   idPrefixes: ['tt'],
@@ -191,14 +192,12 @@ async function resolveIMDb(imdbId) {
 // ============== MAIN RESOLVER ==============
 
 async function resolveTrailer(imdbId, cache) {
-  // Check cache first
   const cacheKey = `trailer:${imdbId}`;
   const cached = await cache.match(new Request(`https://cache/${cacheKey}`));
   if (cached) {
     return await cached.json();
   }
 
-  // Try sources in priority order
   const sources = [
     resolveAppleTV,
     resolvePlex,
@@ -210,7 +209,6 @@ async function resolveTrailer(imdbId, cache) {
   for (const resolver of sources) {
     const result = await resolver(imdbId);
     if (result) {
-      // Cache result
       const response = new Response(JSON.stringify(result), {
         headers: { 'Cache-Control': `max-age=${CACHE_TTL}` }
       });
@@ -229,7 +227,6 @@ export default {
     const url = new URL(request.url);
     const cache = caches.default;
 
-    // CORS headers
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -237,16 +234,16 @@ export default {
       'Content-Type': 'application/json'
     };
 
-    // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Routes
+    // Manifest
     if (url.pathname === '/manifest.json') {
       return new Response(JSON.stringify(MANIFEST), { headers: corsHeaders });
     }
 
+    // Health check
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({ status: 'ok', edge: request.cf?.colo }), { headers: corsHeaders });
     }
@@ -263,8 +260,12 @@ export default {
         return new Response(JSON.stringify({
           streams: [{
             url: trailer.url,
+            name: `▶️ ${trailer.quality}`,
             title: `Trailer (${trailer.source})`,
-            name: `${trailer.quality} ${trailer.source}`
+            behaviorHints: {
+              notWebReady: trailer.url.includes('.m3u8'),
+              bingeGroup: 'trailerio-trailer'
+            }
           }]
         }), { headers: corsHeaders });
       }
