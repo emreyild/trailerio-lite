@@ -46,9 +46,19 @@ async function getTMDBMetadata(imdbId, type = 'movie') {
     );
     const findData = await findRes.json();
 
-    const results = type === 'series'
+    // Check requested type first, then fallback to other type
+    let results = type === 'series'
       ? findData.tv_results
       : findData.movie_results;
+    let actualType = type;
+
+    // Fallback: if not found in requested type, check the other
+    if (!results || results.length === 0) {
+      results = type === 'series'
+        ? findData.movie_results
+        : findData.tv_results;
+      actualType = type === 'series' ? 'movie' : 'series';
+    }
 
     if (!results || results.length === 0) return null;
 
@@ -57,7 +67,7 @@ async function getTMDBMetadata(imdbId, type = 'movie') {
 
     // Get external IDs including Wikidata
     const extRes = await fetchWithTimeout(
-      `https://api.themoviedb.org/3/${type === 'series' ? 'tv' : 'movie'}/${tmdbId}/external_ids?api_key=${TMDB_API_KEY}`
+      `https://api.themoviedb.org/3/${actualType === 'series' ? 'tv' : 'movie'}/${tmdbId}/external_ids?api_key=${TMDB_API_KEY}`
     );
     const extData = await extRes.json();
 
@@ -65,7 +75,8 @@ async function getTMDBMetadata(imdbId, type = 'movie') {
       tmdbId,
       title,
       wikidataId: extData.wikidata_id,
-      imdbId
+      imdbId,
+      actualType
     };
   } catch (e) {
     return null;
